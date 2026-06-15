@@ -1,0 +1,12 @@
+# Core library for API calls to Ollama
+requests==2.31.0
+
+# Jupyter Environment
+jupyterlab==4.0.11
+notebook==7.0.6
+
+# Data Handling & Visualization (for the Notebook metrics)
+pandas==3.0.0
+matplotlib==3.10.8
+seaborn==0.13.2
+numpy==2.4.2

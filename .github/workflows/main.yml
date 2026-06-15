@@ -1,0 +1,45 @@
+name: Dependency Compatibility Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  dependency-check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Ensures you see results for both versions even if one fails
+      matrix:
+        # Testing your current baseline vs the 2026 future-proof standard
+        python-version: ["3.11.3", "3.13.2"]
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        # We disabled the 'cache' here to ensure you aren't seeing old versions
+        # once your versions are stable, you can add: cache: 'pip'
+
+    - name: Debug Requirements
+      run: |
+        echo "Checking content of requirements.txt:"
+        if [ -f requirements.txt ]; then cat requirements.txt; else echo "File not found"; fi
+
+    - name: Check Dependency Resolution
+      run: |
+        if [ -f requirements.txt ]; then
+          python -m pip install --upgrade pip
+          # --dry-run: Don't actually install
+          # --report -: Output JSON result to console
+          # --only-binary :all:: Fail immediately if a 3.13 'wheel' doesn't exist 
+          # (prevents the 'still running...' compilation error)
+          python -m pip install -r requirements.txt --dry-run --report - --only-binary :all:
+        else
+          echo "No requirements.txt found, skipping."
+        fi

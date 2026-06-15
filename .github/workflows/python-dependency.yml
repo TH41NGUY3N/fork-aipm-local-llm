@@ -1,0 +1,45 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Dependency Compatibility Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  dependency-check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Testing 3.11 vs 3.13.2 (the recommended future-proof version)
+        python-version: ["3.11.3", "3.13.12"]
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install Resolver Tools
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install pip-tools
+
+    - name: Check Dependency Resolution
+      run: |
+        if [ -f requirements.txt ]; then
+          # --dry-run: Don't install anything
+          # --report -: Print the resolution result as JSON to the console
+          # If this fails, it means there is a version conflict with the Python version.
+          python -m pip install -r requirements.txt --dry-run --report -
+        else
+          echo "No requirements.txt found, skipping."
+        fi
